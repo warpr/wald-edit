@@ -12,8 +12,8 @@
     const imports = [
         'require',
         'chai',
+        '../lib/edit',
         'n3',
-        'when',
     ];
 
     if (typeof define === 'function' && define.amd) {
@@ -25,12 +25,35 @@
     }
 } (function (require) {
     const assert = require ('chai').assert;
+    const edit = require ('../lib/edit');
     const N3 = require ('n3');
-    const when = require ('when');
 
     suite ('changeset', function () {
-        test ('diff', function () {
-            assert.notEqual ('foo', 'bar');
+        test ('missing', function () {
+            const mbid = 'http://musicbrainz.org/artist/45a663b5-b1cb-4a91-bff6-2bef7bbfdd76#_';
+            const foafName = 'http://xmlns.com/foaf/0.1/name';
+
+            const original = N3.Store ();
+            original.addTriple (mbid, foafName, 'Brittaney Spears');
+
+            const edited = N3.Store ();
+            edited.addTriple (mbid, foafName, 'Britney Spears');
+
+            const added = edit.changeset.missing (edited, original);
+            const removed = edit.changeset.missing (original, edited);
+
+            assert.equal (added.length, 1);
+            assert.equal (removed.length, 1);
+
+            assert.equal (added[0].subject, mbid);
+            assert.equal (added[0].predicate, foafName);
+            assert.equal (added[0].object, 'Britney Spears');
+            assert.equal (added[0].graph, '');
+
+            assert.equal (removed[0].subject, mbid);
+            assert.equal (removed[0].predicate, foafName);
+            assert.equal (removed[0].object, 'Brittaney Spears');
+            assert.equal (removed[0].graph, '');
         });
     });
 }));
