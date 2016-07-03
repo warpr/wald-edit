@@ -56,7 +56,6 @@ The resulting cs:ChangeSet might look like this:
             rdf:predicate foaf:name;
             rdf:object "Brittaney Spears"
         ];
-        cs:subjectOfChange <http://musicbrainz.org/artist/45a663b5-b1cb-4a91-bff6-2bef7bbfdd76>;
         cs:changeReason "fix typo".
 
 Changesets can be sent to a wald:data server, which will make the changes to the dataset and
