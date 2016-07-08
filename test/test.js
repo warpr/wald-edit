@@ -31,6 +31,10 @@
     const N3 = require ('n3');
 
     const mbid = 'http://musicbrainz.org/artist/45a663b5-b1cb-4a91-bff6-2bef7bbfdd76#_';
+    const a = find.a;
+    const cs = find.namespaces.cs;
+    const dc = find.namespaces.dc;
+    const rdf = find.namespaces.rdf;
     const foaf = find.namespaces.foaf;
     const sioc = find.namespaces.sioc;
 
@@ -89,17 +93,34 @@
             assert.equal (addedBlog.graph, '');
         });
 
-        test ('changeset', function (done) {
+        test ('turtle', function (done) {
             const t = testData ();
 
-            edit.changeset.changeset (
+            edit.changeset.turtle (
                 t.original,
                 t.edited,
                 'https://frob.nl/#me',
                 'Fix typo, add microblog'
-            ).then (function (changeset) {
-                console.log (changeset);
-                assert.equal ('WIP', 'WIP');
+            ).then (find.tools.parseTurtle).then (function (datastore) {
+                const c = find.factory (datastore);
+
+                const id = c.firstSubject (a, cs.ChangeSet);
+                assert.isOk (N3.Util.isBlank (id));
+
+                assert.equal (c.firstObject (id, dc.creator), 'https://frob.nl/#me');
+                assert.equal (c.firstObject (id, cs.changeReason), '"Fix typo, add microblog"');
+
+                const added = c.allObjects (id, cs.addition);
+                const removed = c.allObjects (id, cs.removal);
+
+                assert.equal (added.length, 2);
+                assert.equal (removed.length, 1);
+
+                assert.equal (c.firstObject (removed[0], a), rdf.Statement);
+                assert.equal (c.firstObject (removed[0], rdf.subject), mbid);
+                assert.equal (c.firstObject (removed[0], rdf.predicate), foaf.name);
+                assert.equal (c.firstObject (removed[0], rdf.object), '"Brittaney Spears"');
+
                 done ();
             }).catch (done);
         });
